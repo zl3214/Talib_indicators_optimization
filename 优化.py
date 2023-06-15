@@ -93,42 +93,43 @@ default_params = {
 }
 
 params_ranges = {
-    'SMA': {'timeperiod': list(range(5, 61))},
-    'EMA': {'timeperiod': list(range(5, 61))},
-    'WMA': {'timeperiod': list(range(5, 61))},
-    'MACD': {'fastperiod': list(range(5, 16)), 'slowperiod': list(range(17, 31)), 'signalperiod': list(range(6, 15))},
-    'RSI': {'timeperiod': list(range(5, 31))},
-    'BBANDS': {'timeperiod': list(range(5, 31)), 'nbdevup': list(np.arange(1, 3, 0.2)), 'nbdevdn': list(
-        np.arange(1, 3, 0.2)), 'matype': list(range(0, 9))},
-    'ADX': {'timeperiod': list(range(5, 31))},
-    'STOCH': {'fastk_period': list(range(5, 21)), 'slowk_period': list(range(3, 15)), 'slowk_matype': list(range(0, 9)),
-              'slowd_period': list(range(3, 15)), 'slowd_matype': list(range(0, 9))},
-    'CCI': {'timeperiod': list(range(5, 31))},
-    'ROC': {'timeperiod': list(range(5, 21))},
-    'ATR': {'timeperiod': list(range(5, 31))},
+    'SMA': {'timeperiod': list(range(5, 61, 5))},
+    'EMA': {'timeperiod': list(range(5, 61, 5))},
+    'WMA': {'timeperiod': list(range(5, 61, 5))},
+    'MACD': {'fastperiod': list(range(5, 16, 3)), 'slowperiod': list(range(17, 31, 3)), 'signalperiod': list(range(6, 15, 3))},
+    'RSI': {'timeperiod': list(range(5, 31, 3))},
+    'BBANDS': {'timeperiod': list(range(5, 31, 3)), 'nbdevup': list(np.arange(1, 3, 0.6)), 'nbdevdn': list(
+        np.arange(1, 3, 0.6)), 'matype': list(range(0, 9, 3))},
+    'ADX': {'timeperiod': list(range(5, 31, 3))},
+    'STOCH': {'fastk_period': list(range(5, 21, 3)), 'slowk_period': list(range(3, 15, 3)), 'slowk_matype': list(range(0, 9, 3)),
+              'slowd_period': list(range(3, 15, 3)), 'slowd_matype': list(range(0, 9, 3))},
+    'CCI': {'timeperiod': list(range(5, 31, 3))},
+    'ROC': {'timeperiod': list(range(5, 21, 3))},
+    'ATR': {'timeperiod': list(range(5, 31, 3))},
     'OBV': {},
-    'MFI': {'timeperiod': list(range(5, 31))},
+    'MFI': {'timeperiod': list(range(5, 31, 3))},
     'AD': {},
-    'WILLR': {'timeperiod': list(range(5, 31))},
-    'ULTOSC': {'timeperiod1': list(range(5, 16)), 'timeperiod2': list(range(17, 31)), 'timeperiod3': list(range(32, 61))},
-    'SAR': {'acceleration': list(np.arange(0.01, 0.21, 0.01)), 'maximum': list(np.arange(0.1, 0.5, 0.05))},
-    'STDDEV': {'timeperiod': list(range(5, 21)), 'nbdev': list(np.arange(1, 3, 0.2))},
-    'NATR': {'timeperiod': list(range(5, 31))},
+    'WILLR': {'timeperiod': list(range(5, 31, 3))},
+    'ULTOSC': {'timeperiod1': list(range(5, 16, 3)), 'timeperiod2': list(range(17, 31, 3)), 'timeperiod3': list(range(32, 61, 3))},
+    'SAR': {'acceleration': list(np.arange(0.01, 0.21, 0.03)), 'maximum': list(np.arange(0.1, 0.5, 0.15))},
+    'STDDEV': {'timeperiod': list(range(5, 21, 3)), 'nbdev': list(np.arange(1, 3, 0.6))},
+    'NATR': {'timeperiod': list(range(5, 31, 3))},
     'TRANGE': {},
-    'ADOSC': {'fastperiod': list(range(2, 15)), 'slowperiod': list(range(16, 31))},
+    'ADOSC': {'fastperiod': list(range(2, 15, 3)), 'slowperiod': list(range(16, 31, 3))},
     'AVGPRICE': {},
     'MEDPRICE': {},
     'TYPPRICE': {},
     'WCLPRICE': {},
     'HT_TRENDLINE': {},
-    'KAMA': {'timeperiod': list(range(5, 61))},
-    'TEMA': {'timeperiod': list(range(5, 61))},
+    'KAMA': {'timeperiod': list(range(5, 61, 5))},
+    'TEMA': {'timeperiod': list(range(5, 61, 5))},
     'HT_DCPERIOD': {},
     'HT_DCPHASE': {},
     'HT_PHASOR': {},
     'HT_SINE': {},
     'HT_TRENDMODE': {}
 }
+
 
 
 def calculate_indicators(df, indicators):
@@ -405,8 +406,10 @@ def optimize_parameters(params_ranges, data_all, target='Close', initial_cash=10
 
 def optimize_annualized_return(params_ranges, data_all, target='Close', initial_cash=10000):
     all_results = []
+
     # Loop 每个stock
     for stock_code, df in data_all.items():
+
         # 对每一个指标进行循环
         for indicator, params in tqdm(params_ranges.items()):
 
@@ -428,11 +431,18 @@ def optimize_annualized_return(params_ranges, data_all, target='Close', initial_
                 cash, shares, total_value, max_drawdown, ann_volatility, number_of_trades, returns = simulate_trading(
                     df, indicator_values, target, initial_cash)
 
+                # 计算累计收益
+                cumulative_returns = np.prod([1 + r for r in returns]) - 1
+
                 # 计算年化收益
-                avg_returns = np.mean(returns) * 252  # Assuming 252 trading days in a year
+                number_of_years = len(returns) / 252
+                annualized_return = (1 + cumulative_returns) ** (1 / number_of_years) - 1
 
                 # 用年化收益作为得分
-                score = avg_returns
+                if number_of_trades == 0:
+                    score = 0
+                else:
+                    score = annualized_return
 
                 # 如果参数的得分更高则替代
                 if score > best_score:
@@ -443,7 +453,7 @@ def optimize_annualized_return(params_ranges, data_all, target='Close', initial_
                         'Profit': total_value - initial_cash,
                         'Max Drawdown': max_drawdown,
                         'Annualized Volatility': ann_volatility,
-                        'Annualized Return': avg_returns,
+                        'Annualized Return': annualized_return,
                         'Number of Trades': number_of_trades
                     }
 
@@ -462,7 +472,9 @@ def optimize_annualized_return(params_ranges, data_all, target='Close', initial_
 
     # 储存为csv文件
     results_df = pd.DataFrame(all_results)
+    results_df = results_df.sort_values(by='Score', ascending=False)
     results_df.to_csv('best_params_annualized_return.csv', index=False)
+
 
 
 def optimize_sharpe_ratio(params_ranges, data_all, target='Close', initial_cash=10000):
@@ -494,10 +506,16 @@ def optimize_sharpe_ratio(params_ranges, data_all, target='Close', initial_cash=
                 avg_returns = np.mean(returns) * 252  # Assuming 252 trading days in a year
                 std_returns = np.std(returns) * np.sqrt(252)
                 risk_free_rate = 0  # You can change this value based on actual data
-                sharpe_ratio = (avg_returns - risk_free_rate) / std_returns
+                if std_returns != 0 and not np.isnan(std_returns):
+                    sharpe_ratio = (avg_returns - risk_free_rate) / std_returns
+                else:
+                    sharpe_ratio = -1e5
 
                 # 用夏普比率作为得分
-                score = sharpe_ratio
+                if number_of_trades == 0:
+                    score = 0
+                else:
+                    score = sharpe_ratio
 
                 # 如果参数的得分更高则替代
                 if score > best_score:
@@ -527,13 +545,16 @@ def optimize_sharpe_ratio(params_ranges, data_all, target='Close', initial_cash=
 
     # 储存为csv文件
     results_df = pd.DataFrame(all_results)
+    results_df = results_df.sort_values(by='Score', ascending=False)
     results_df.to_csv('best_params_sharpe_ratio.csv', index=False)
 
 
 def optimize_annualized_return_max_drawdown_ratio(params_ranges, data_all, target='Close', initial_cash=10000):
     all_results = []
+
     # Loop 每个stock
     for stock_code, df in data_all.items():
+
         # 对每一个指标进行循环
         for indicator, params in tqdm(params_ranges.items()):
 
@@ -552,11 +573,21 @@ def optimize_annualized_return_max_drawdown_ratio(params_ranges, data_all, targe
                 indicator_values.fillna(0, inplace=True)
 
                 # 评估参数效果
-                cash, shares, total_value, max_drawdown, ann_volatility, number_of_trades, returns = simulate_trading(df, indicator_values, target, initial_cash)
+                cash, shares, total_value, max_drawdown, ann_volatility, number_of_trades, returns = simulate_trading(
+                    df, indicator_values, target, initial_cash)
 
-                # 计算年化收益与最大回撤之比
-                avg_returns = np.mean(returns) * 252  # Assuming 252 trading days in a year
-                score = avg_returns / (max_drawdown + 0.0001)
+                # 计算累计收益
+                cumulative_returns = np.prod([1 + r for r in returns]) - 1
+
+                # 计算年化收益
+                number_of_years = len(returns) / 252
+                annualized_return = (1 + cumulative_returns) ** (1 / number_of_years) - 1
+
+                # 用年化收益作为得分
+                if number_of_trades == 0:
+                    score = 0
+                else:
+                    score = annualized_return/(0.0001 + max_drawdown)
 
                 # 如果参数的得分更高则替代
                 if score > best_score:
@@ -567,7 +598,7 @@ def optimize_annualized_return_max_drawdown_ratio(params_ranges, data_all, targe
                         'Profit': total_value - initial_cash,
                         'Max Drawdown': max_drawdown,
                         'Annualized Volatility': ann_volatility,
-                        'Annualized Return': avg_returns,
+                        'Annualized Return': annualized_return,
                         'Number of Trades': number_of_trades
                     }
 
@@ -586,6 +617,7 @@ def optimize_annualized_return_max_drawdown_ratio(params_ranges, data_all, targe
 
     # 储存为csv文件
     results_df = pd.DataFrame(all_results)
+    results_df = results_df.sort_values(by='Score', ascending=False)
     results_df.to_csv('best_params_annualized_return_max_drawdown_ratio.csv', index=False)
 
 
@@ -597,6 +629,7 @@ def print_hi(name):
     stocks = df['成分券代码Constituent Code'].unique()
 
     yahoo_stocks = []
+    yahoo_stocks.append('000300.SS')
 
     # 更改股票代码的格式为调用yahoo finance准备
     for stock in stocks:
@@ -609,8 +642,8 @@ def print_hi(name):
 
     data_all = {}
 
-    for stock in yahoo_stocks[:2]:
-        data = yf.download(stock, start='2022-05-26', end='2023-05-26')
+    for stock in yahoo_stocks[:1]:
+        data = yf.download(stock, start='2018-05-26', end='2023-05-26')
         data_all[stock] = data
 
     # 处理target中的缺失数据
@@ -634,6 +667,11 @@ def print_hi(name):
 
     # 按照annualized return优化参数
     optimize_annualized_return(params_ranges, data_all)
+
+    #
+    optimize_annualized_return_max_drawdown_ratio(params_ranges, data_all)
+
+    optimize_sharpe_ratio(params_ranges, data_all)
 
 
 
